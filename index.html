@@ -4,11 +4,441 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crypto Portfolio Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --bg-light: #f9f9f9;
+      --text-light: #222;
+      --bg-dark: #121212;
+      --text-dark: #eee;
+      --primary-color: #4caf50;
+      --danger-color: #e53935;
+      --gain-color: #43a047;
+      --loss-color: #e53935;
+      --card-bg-light: #fff;
+      --card-bg-dark: #1e1e1e;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: background-color 0.3s, color 0.3s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 900px;
+    }
+    #total-value {
+      font-weight: 700;
+      font-size: 1.25rem;
+      align-self: center;
+      min-width: 180px;
+      text-align: center;
+      color: var(--primary-color);
+    }
+    button, select {
+      padding: 0.4rem 0.8rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background-color: var(--card-bg-light);
+      color: var(--text-light);
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+      min-width: 140px;
+    }
+    button:hover, select:hover {
+      background-color: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
+    body.dark button, body.dark select {
+      background-color: var(--card-bg-dark);
+      color: var(--text-dark);
+      border-color: #555;
+    }
+    body.dark button:hover, body.dark select:hover {
+      background-color: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
+    #crypto-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto 2rem;
+      max-width: 900px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .crypto-item {
+      background-color: var(--card-bg-light);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark .crypto-item {
+      background-color: var(--card-bg-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+    .crypto-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .crypto-price {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .crypto-amount {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      color: #666;
+    }
+    .crypto-value {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .crypto-change {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .gain {
+      color: var(--gain-color);
+    }
+    .loss {
+      color: var(--loss-color);
+    }
+    #price-chart-container {
+      max-width: 900px;
+      width: 100%;
+      margin-bottom: 2rem;
+      background-color: var(--card-bg-light);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark #price-chart-container {
+      background-color: var(--card-bg-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+    #loading-spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 2rem auto;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    @media (max-width: 480px) {
+      #controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      button, select {
+        min-width: 100%;
+      }
+      #total-value {
+        min-width: auto;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <h1>Crypto Portfolio Tracker</h1>
-  <ul id="crypto-list">Loading portfolio...</ul>
-  <script src="script.js"></script>
+
+  <div id="controls">
+    <div id="total-value">Total Portfolio Value: $0.00</div>
+    <select id="sort-price" aria-label="Sort by Price">
+      <option value="none">Sort by Price</option>
+      <option value="asc">Price: Low to High</option>
+      <option value="desc">Price: High to Low</option>
+    </select>
+    <select id="filter-gain-loss" aria-label="Filter by Gain or Loss">
+      <option value="all">Show All</option>
+      <option value="gain">Only Gain</option>
+      <option value="loss">Only Loss</option>
+    </select>
+    <button id="theme-toggle" aria-pressed="false" aria-label="Toggle Dark/Light Theme">Toggle Theme</button>
+  </div>
+
+  <div id="loading-spinner" role="status" aria-live="polite" aria-label="Loading"></div>
+
+  <ul id="crypto-list" aria-live="polite" aria-busy="true">Loading portfolio...</ul>
+
+  <div id="price-chart-container" aria-label="Historical Price Chart">
+    <canvas id="price-chart" width="900" height="400"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (() => {
+      const cryptoListEl = document.getElementById('crypto-list');
+      const totalValueEl = document.getElementById('total-value');
+      const sortPriceEl = document.getElementById('sort-price');
+      const filterGainLossEl = document.getElementById('filter-gain-loss');
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      const priceChartCtx = document.getElementById('price-chart').getContext('2d');
+      const priceChartContainer = document.getElementById('price-chart-container');
+
+      // Sample portfolio data - in real app this would come from an API or storage
+      let portfolio = [
+        { id: 'btc', name: 'Bitcoin', symbol: 'BTC', price: 28000, amount: 0.5, history: [27000, 27500, 28000, 28500, 28200, 28000, 27800] },
+        { id: 'eth', name: 'Ethereum', symbol: 'ETH', price: 1800, amount: 2, history: [1700, 1750, 1800, 1850, 1820, 1800, 1780] },
+        { id: 'ada', name: 'Cardano', symbol: 'ADA', price: 0.45, amount: 1000, history: [0.4, 0.42, 0.45, 0.47, 0.46, 0.45, 0.44] },
+        { id: 'doge', name: 'Dogecoin', symbol: 'DOGE', price: 0.07, amount: 5000, history: [0.06, 0.065, 0.07, 0.075, 0.073, 0.07, 0.068] }
+      ];
+
+      // Calculate gain/loss percentage based on last two history points
+      function calcChangePercent(history) {
+        if (!history || history.length < 2) return 0;
+        const last = history[history.length - 1];
+        const prev = history[history.length - 2];
+        if (prev === 0) return 0;
+        return ((last - prev) / prev) * 100;
+      }
+
+      // Format number as currency
+      function formatCurrency(num) {
+        return num.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+      }
+
+      // Render portfolio list with filtering and sorting
+      function renderPortfolio() {
+        loadingSpinner.style.display = 'block';
+        cryptoListEl.setAttribute('aria-busy', 'true');
+
+        setTimeout(() => {
+          let filtered = portfolio.slice();
+
+          // Filter by gain/loss
+          const filterVal = filterGainLossEl.value;
+          if (filterVal === 'gain') {
+            filtered = filtered.filter(c => calcChangePercent(c.history) > 0);
+          } else if (filterVal === 'loss') {
+            filtered = filtered.filter(c => calcChangePercent(c.history) < 0);
+          }
+
+          // Sort by price
+          const sortVal = sortPriceEl.value;
+          if (sortVal === 'asc') {
+            filtered.sort((a, b) => a.price - b.price);
+          } else if (sortVal === 'desc') {
+            filtered.sort((a, b) => b.price - a.price);
+          }
+
+          // Clear list
+          cryptoListEl.innerHTML = '';
+
+          // Calculate total portfolio value
+          let totalValue = 0;
+
+          filtered.forEach(coin => {
+            const value = coin.price * coin.amount;
+            totalValue += value;
+            const changePercent = calcChangePercent(coin.history);
+            const changeClass = changePercent > 0 ? 'gain' : (changePercent < 0 ? 'loss' : '');
+            const changeSign = changePercent > 0 ? '+' : '';
+
+            const li = document.createElement('li');
+            li.className = 'crypto-item';
+            li.setAttribute('tabindex', '0');
+            li.setAttribute('aria-label', `${coin.name} (${coin.symbol}), Price ${formatCurrency(coin.price)}, Amount ${coin.amount}, Total value ${formatCurrency(value)}, Change ${changeSign}${changePercent.toFixed(2)} percent`);
+
+            li.innerHTML = `
+              <div class="crypto-header">${coin.name} (${coin.symbol})</div>
+              <div class="crypto-price">Price: ${formatCurrency(coin.price)}</div>
+              <div class="crypto-amount">Amount: ${coin.amount}</div>
+              <div class="crypto-value">Value: ${formatCurrency(value)}</div>
+              <div class="crypto-change ${changeClass}">Change: ${changeSign}${changePercent.toFixed(2)}%</div>
+            `;
+            li.addEventListener('click', () => {
+              updateChart(coin);
+            });
+            li.addEventListener('keypress', e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                updateChart(coin);
+              }
+            });
+
+            cryptoListEl.appendChild(li);
+          });
+
+          totalValueEl.textContent = `Total Portfolio Value: ${formatCurrency(totalValue)}`;
+
+          loadingSpinner.style.display = 'none';
+          cryptoListEl.setAttribute('aria-busy', 'false');
+
+          // If no coins after filter show message
+          if (filtered.length === 0) {
+            cryptoListEl.innerHTML = '<li style="grid-column: 1/-1; text-align:center; color:#888;">No coins to display for selected filter.</li>';
+            priceChart.clear();
+          }
+        }, 300);
+      }
+
+      // Chart.js setup
+      const priceChart = new Chart(priceChartCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: '',
+            data: [],
+            borderColor: 'var(--primary-color)',
+            backgroundColor: 'rgba(76,175,80,0.2)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Days Ago'
+              },
+              ticks: {
+                reverse: true,
+                stepSize: 1,
+                callback: val => val === 0 ? 'Today' : `${val}d`
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Price (USD)'
+              },
+              beginAtZero: false
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: getComputedStyle(document.body).color
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: ctx => formatCurrency(ctx.parsed.y)
+              }
+            }
+          }
+        }
+      });
+
+      function updateChart(coin) {
+        if (!coin || !coin.history) {
+          priceChart.data.labels = [];
+          priceChart.data.datasets[0].data = [];
+          priceChart.data.datasets[0].label = '';
+          priceChart.update();
+          return;
+        }
+        const labels = coin.history.map((_, i) => coin.history.length - 1 - i);
+        const data = coin.history.slice().reverse();
+        priceChart.data.labels = labels;
+        priceChart.data.datasets[0].data = data;
+        priceChart.data.datasets[0].label = `${coin.name} Price History`;
+        priceChart.update();
+      }
+
+      // Theme toggle with localStorage persistence
+      function loadTheme() {
+        const savedTheme = localStorage.getItem('crypto-theme');
+        if (savedTheme === 'dark') {
+          document.body.classList.add('dark');
+          themeToggleBtn.setAttribute('aria-pressed', 'true');
+          themeToggleBtn.textContent = 'Switch to Light Theme';
+        } else {
+          document.body.classList.remove('dark');
+          themeToggleBtn.setAttribute('aria-pressed', 'false');
+          themeToggleBtn.textContent = 'Switch to Dark Theme';
+        }
+        // Update chart colors on theme change
+        updateChartColors();
+      }
+
+      function toggleTheme() {
+        if (document.body.classList.contains('dark')) {
+          document.body.classList.remove('dark');
+          localStorage.setItem('crypto-theme', 'light');
+          themeToggleBtn.setAttribute('aria-pressed', 'false');
+          themeToggleBtn.textContent = 'Switch to Dark Theme';
+        } else {
+          document.body.classList.add('dark');
+          localStorage.setItem('crypto-theme', 'dark');
+          themeToggleBtn.setAttribute('aria-pressed', 'true');
+          themeToggleBtn.textContent = 'Switch to Light Theme';
+        }
+        updateChartColors();
+      }
+
+      function updateChartColors() {
+        const isDark = document.body.classList.contains('dark');
+        priceChart.options.plugins.legend.labels.color = isDark ? '#eee' : '#222';
+        priceChart.options.scales.x.title.color = isDark ? '#eee' : '#222';
+        priceChart.options.scales.x.ticks.color = isDark ? '#ccc' : '#444';
+        priceChart.options.scales.y.title.color = isDark ? '#eee' : '#222';
+        priceChart.options.scales.y.ticks.color = isDark ? '#ccc' : '#444';
+        priceChart.update();
+      }
+
+      // Event listeners
+      sortPriceEl.addEventListener('change', renderPortfolio);
+      filterGainLossEl.addEventListener('change', renderPortfolio);
+      themeToggleBtn.addEventListener('click', toggleTheme);
+
+      // Initial load
+      loadTheme();
+      renderPortfolio();
+      updateChart(portfolio[0]);
+    })();
+  </script>
 </body>
 </html>

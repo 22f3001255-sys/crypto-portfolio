@@ -3,11 +3,71 @@ body {
   margin: 1em 2em;
   background: #f9f9f9;
   color: #222;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-theme {
+  background: #121212;
+  color: #eee;
 }
 
 h1 {
   text-align: center;
   margin-bottom: 1em;
+}
+
+#total-value {
+  max-width: 400px;
+  margin: 0.5em auto 1.5em;
+  font-size: 1.5em;
+  font-weight: 700;
+  text-align: center;
+  color: #004400;
+}
+
+body.dark-theme #total-value {
+  color: #90ee90;
+}
+
+#sort-price,
+#filter-gain-loss,
+#theme-toggle {
+  display: inline-block;
+  margin: 0 0.5em 1em 0.5em;
+  padding: 0.4em 0.8em;
+  font-size: 0.9em;
+  font-weight: 600;
+  border: 1px solid #007700;
+  border-radius: 4px;
+  background: #e6ffe6;
+  color: #007700;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+#sort-price:hover,
+#filter-gain-loss:hover,
+#theme-toggle:hover {
+  background: #cceccc;
+  border-color: #004400;
+  color: #004400;
+}
+
+body.dark-theme #sort-price,
+body.dark-theme #filter-gain-loss,
+body.dark-theme #theme-toggle {
+  background: #004400;
+  border-color: #90ee90;
+  color: #90ee90;
+}
+
+body.dark-theme #sort-price:hover,
+body.dark-theme #filter-gain-loss:hover,
+body.dark-theme #theme-toggle:hover {
+  background: #006600;
+  border-color: #b3ffb3;
+  color: #b3ffb3;
 }
 
 #crypto-list {
@@ -18,6 +78,12 @@ h1 {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.dark-theme #crypto-list {
+  background: #1e1e1e;
+  border-color: #444;
 }
 
 #crypto-list li {
@@ -25,6 +91,12 @@ h1 {
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.dark-theme #crypto-list li {
+  border-bottom: 1px solid #333;
 }
 
 #crypto-list li:last-child {
@@ -33,9 +105,141 @@ h1 {
 
 .crypto-info {
   font-weight: bold;
+  color: #222;
+  transition: color 0.3s;
+}
+
+body.dark-theme .crypto-info {
+  color: #ddd;
 }
 
 .crypto-price {
   font-family: monospace;
   color: #007700;
+  min-width: 80px;
+  text-align: right;
+  transition: color 0.3s;
+}
+
+body.dark-theme .crypto-price {
+  color: #90ee90;
+}
+
+.crypto-gain {
+  font-family: monospace;
+  min-width: 70px;
+  text-align: right;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.crypto-gain.positive {
+  color: #007700;
+}
+
+.crypto-gain.negative {
+  color: #aa0000;
+}
+
+body.dark-theme .crypto-gain.positive {
+  color: #90ee90;
+}
+
+body.dark-theme .crypto-gain.negative {
+  color: #ff6b6b;
+}
+
+#price-chart-container {
+  max-width: 400px;
+  margin: 2em auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1em;
+  box-sizing: border-box;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.dark-theme #price-chart-container {
+  background: #1e1e1e;
+  border-color: #444;
+}
+
+#price-chart {
+  width: 100% !important;
+  height: 250px !important;
+}
+
+#loading-spinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border: 5px solid #ccc;
+  border-top-color: #007700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 1000;
+  display: none;
+}
+
+body.dark-theme #loading-spinner {
+  border: 5px solid #555;
+  border-top-color: #90ee90;
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    margin: 1em 1em;
+    font-size: 14px;
+  }
+
+  #total-value {
+    font-size: 1.3em;
+    margin-bottom: 1em;
+  }
+
+  #sort-price,
+  #filter-gain-loss,
+  #theme-toggle {
+    font-size: 0.85em;
+    padding: 0.35em 0.7em;
+    margin: 0 0.3em 1em 0.3em;
+  }
+
+  #crypto-list {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  #crypto-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.5em 0.75em;
+  }
+
+  .crypto-info,
+  .crypto-price,
+  .crypto-gain {
+    min-width: auto;
+    text-align: left;
+    margin-top: 0.2em;
+  }
+
+  #price-chart-container {
+    max-width: 100%;
+    padding: 0.75em;
+  }
+
+  #price-chart {
+    height: 200px !important;
+  }
 }
